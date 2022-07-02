@@ -1,6 +1,6 @@
 package org.dng;
 
-import java.util.concurrent.locks.Condition;
+//import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -20,8 +20,8 @@ public class Locks {
 
 
 class Philosopher implements Runnable{
-    private Fork forkLeft;
-    private Fork forkRight;
+    private final Fork forkLeft;
+    private final Fork forkRight;
 
     public Philosopher(Fork forkLeft, Fork forkRight) {
         this.forkLeft = forkLeft;
@@ -46,14 +46,8 @@ class Philosopher implements Runnable{
                     }
                     System.out.println(Thread.currentThread().getName() + " put the forks");
                 } finally {
-                    if (forkLeftLocked){
                         forkLeft.lock.unlock();
-//                        forkLeftLocked = false;
-                    }
-                    if (forkRightLocked){
                         forkRight.lock.unlock();
-//                        forkRightLocked = false;
-                    }
                 }
             } else {
                 if (forkLeftLocked){
@@ -81,7 +75,7 @@ class Fork {
     //private volatile boolean busy;
     public final Lock lock = new ReentrantLock();
     //private final Condition condition = lock.newCondition();
-    private String name;
+    private final String name;
 
     public Fork(String name) {
         this.name = name;
