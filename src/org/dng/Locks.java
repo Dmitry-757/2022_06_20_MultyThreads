@@ -1,19 +1,65 @@
 package org.dng;
 
-//import java.util.concurrent.locks.Condition;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Locks {
 
+    public static volatile Map<String, Boolean> phHungry = new HashMap<>();
+
     public static void main(String[] args) {
+
         Fork fork1 = new Fork("fork1");
         Fork fork2 = new Fork("fork2");
-        //final Lock lock = new ReentrantLock();
+        Fork fork3 = new Fork("fork3");
+        Fork fork4 = new Fork("fork4");
+        Fork fork5 = new Fork("fork5");
 
 
-        new Thread(new Philosopher(fork1, fork2), "Ph1").start();
-        new Thread(new Philosopher(fork2, fork1), "Ph2").start();
+        Thread th1 = new Thread(new Philosopher(fork1, fork2), "Ph1");
+        th1.start();
+        phHungry.put("Ph1", true);
+        Thread th2 = new Thread(new Philosopher(fork2, fork3), "Ph2");
+        th2.start();
+        phHungry.put("Ph2", true);
+        Thread th3 = new Thread(new Philosopher(fork3, fork4), "Ph3");
+        th3.start();
+        phHungry.put("Ph3", true);
+        Thread th4 = new Thread(new Philosopher(fork4, fork5), "Ph4");
+        th4.start();
+        phHungry.put("Ph4", true);
+        //Thread th5 = new Thread(new Philosopher(fork5, fork1), "Ph5");
+        Thread th5 = new Thread(new Philosopher(fork1, fork5), "Ph5");//change taking of forks order
+        th5.start();
+        phHungry.put("Ph5", true);
+
+
+        //lets wait until all philosophers becomes not hungry
+        while (phHungry.get("Ph1")||phHungry.get("Ph2")||phHungry.get("Ph3")||phHungry.get("Ph4")||phHungry.get("Ph5")){
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        th1.interrupt();
+        th2.interrupt();
+        th3.interrupt();
+        th4.interrupt();
+        th5.interrupt();
+        try {
+            th1.join();
+            th2.join();
+            th3.join();
+            th4.join();
+            th5.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("all phs has ate");
 
     }
 }
@@ -30,7 +76,7 @@ class Philosopher implements Runnable{
 
     @Override
     public void run() {
-        while (true) {
+        while (!Thread.interrupted()) {
             System.out.println(Thread.currentThread().getName()+" try to take fork");
             boolean forkLeftLocked = forkLeft.lock.tryLock();
             boolean forkRightLocked = forkRight.lock.tryLock();
@@ -39,10 +85,13 @@ class Philosopher implements Runnable{
                 try {
                     System.out.println(Thread.currentThread().getName() + " took the forks");
                     System.out.println(Thread.currentThread().getName() + " eating....");
+                    Locks.phHungry.put(Thread.currentThread().getName(), false);
+
                     try {
                         Thread.sleep(10000);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        //e.printStackTrace();
+                        Thread.currentThread().interrupt();
                     }
                     System.out.println(Thread.currentThread().getName() + " put the forks");
                 } finally {
