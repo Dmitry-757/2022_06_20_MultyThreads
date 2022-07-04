@@ -7,13 +7,13 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Locks {
 
     public static void main(String[] args) {
-        Fork forkLeft = new Fork("Left");
-        Fork forkRight = new Fork("Right");
+        Fork fork1 = new Fork("fork1");
+        Fork fork2 = new Fork("fork2");
         //final Lock lock = new ReentrantLock();
 
 
-        new Thread(new Philosopher(forkLeft, forkRight), "Ph1").start();
-        new Thread(new Philosopher(forkLeft, forkRight), "Ph2").start();
+        new Thread(new Philosopher(fork1, fork2), "Ph1").start();
+        new Thread(new Philosopher(fork2, fork1), "Ph2").start();
 
     }
 }
